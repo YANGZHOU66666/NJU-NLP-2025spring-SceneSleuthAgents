@@ -1,0 +1,12 @@
+2025-05-03 19:39:00,472 - INFO - Processing 10 prompts...
+2025-05-03 19:39:09,507 - INFO - Prompt #4 - Accuracy: 0.0
+2025-05-03 19:39:10,331 - INFO - Prompt #5 - Accuracy: 1.0
+2025-05-03 19:39:12,140 - INFO - Prompt #7 - Accuracy: 0.0
+2025-05-03 19:39:12,334 - INFO - Prompt #3 - Accuracy: 0.0
+2025-05-03 19:39:16,037 - INFO - Prompt #8 - Accuracy: 0.0
+2025-05-03 19:39:18,298 - INFO - Prompt #9 - Accuracy: 0.0
+2025-05-03 19:39:19,373 - INFO - Prompt #1 - Accuracy: 0.0
+2025-05-03 19:39:22,437 - INFO - Prompt #10 - Accuracy: 0.0
+2025-05-03 19:39:26,488 - INFO - Prompt #6 - Accuracy: 0.0
+2025-05-03 19:39:27,480 - INFO - Prompt #2 - Accuracy: 0.0
+2025-05-03 19:39:27,482 - INFO - Successfully wrote results to tc_200_zh_output.json
