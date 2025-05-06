@@ -37,6 +37,8 @@ class DataAnalyzeAgent(BaseAgent):
         try:
             response = await api_requestor.call_api(messages)
             result = await response
+
+            print(result.get('choices', [{}])[0].get('finish_reason', {}))
             
             # 从 API 响应中提取内容
             content = result.get('choices', [{}])[0].get('message', {}).get('content', '')

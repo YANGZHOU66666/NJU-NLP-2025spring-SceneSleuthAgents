@@ -6,8 +6,8 @@ from typing import Dict, Any, List, Optional
 
 class AsyncApiRequester:
     def __init__(self, 
-                 model: str = "THUDM/GLM-4-32B-0414",
-                 max_tokens: int = 512,
+                 model: str = "deepseek-ai/DeepSeek-V3",
+                 max_tokens: int = 8192,
                  temperature: float = 0.7,
                  top_p: float = 0.7,
                  top_k: int = 50,
@@ -76,6 +76,7 @@ class AsyncApiRequester:
             for attempt in range(1, self.max_retries + 1):
                 try:
                     print(f"[协程{asyncio.current_task().get_name()}] 开始请求: {payload['messages'][0]['content'][:30]}..., 尝试第{attempt}次")
+                    print('='*50)
                     
                     headers = {
                         "Authorization": f"Bearer {self.api_token}",
