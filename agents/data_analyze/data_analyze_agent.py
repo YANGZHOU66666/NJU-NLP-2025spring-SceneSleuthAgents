@@ -11,7 +11,7 @@ class DataAnalyzeAgent(BaseAgent):
     def __init__(self):
         pass
     
-    async def call_api(self, api_requestor: AsyncApiRequester, initial_prompt: str) -> Dict[str, Any]:
+    async def execute(self, api_requestor: AsyncApiRequester, initial_prompt: str) -> Dict[str, Any]:
         """
         分析初始提示中的关键信息
         

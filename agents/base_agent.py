@@ -8,7 +8,7 @@ class BaseAgent(ABC):
     """
     
     @abstractmethod
-    def call_api(self, api_requestor: AsyncApiRequester, *args, **kwargs) -> Any:
+    def execute(self, api_requestor: AsyncApiRequester, *args, **kwargs) -> Any:
         """
         调用 API 的抽象方法
         

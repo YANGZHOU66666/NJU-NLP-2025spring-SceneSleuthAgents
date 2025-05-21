@@ -1,3 +1,4 @@
+# 数据探索性分析，实际效果不好
 import json
 import asyncio
 import csv
@@ -71,7 +72,7 @@ async def analyze_samples(api_requestor: AsyncApiRequester, n_samples: int = 10)
     # 为每个样本创建分析任务
     for i, sample in enumerate(zh_data[:n_samples], 1):
         # 创建分析任务
-        task = asyncio.create_task(agent.call_api(api_requestor, sample.get('prompt', '')))
+        task = asyncio.create_task(agent.execute(api_requestor, sample.get('prompt', '')))
         tasks.append((i, task))
     
     # 存储所有分析结果

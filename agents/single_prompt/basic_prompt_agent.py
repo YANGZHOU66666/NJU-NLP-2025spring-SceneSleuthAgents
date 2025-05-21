@@ -1,4 +1,3 @@
-from typing import Any, Dict
 from agents.base_agent import BaseAgent
 from api_requestor import AsyncApiRequester
 import json
@@ -11,7 +10,7 @@ class BasicPromptAgent(BaseAgent):
     def __init__(self):
         pass
     
-    async def call_api(self, api_requestor: AsyncApiRequester, prompt: str) -> str:
+    async def execute(self, api_requestor: AsyncApiRequester, prompt: str) -> str:
         """
         处理单个提示并返回格式化答案
         

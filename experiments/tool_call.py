@@ -1,5 +1,5 @@
 """
-使用链式思考提示(COT)的实验脚本，对中文数据集进行测试
+使用工具调用(Tool Call)的实验脚本，对中文数据集进行测试
 实现了并行处理以提高效率
 """
 import json
@@ -13,11 +13,11 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 from api_requestor import AsyncApiRequester
-from agents.single_prompt.cot_prompt_agent import COTPromptAgent
+from agents.tool_call.tool_call_agent import ToolCallAgent
 from utils import evaluate_response
 
 async def process_samples(api_requestor: AsyncApiRequester, data: list, n_samples: int = None,
-                      hooks: dict = None):
+                      hooks: dict = None, max_print_length: int = 200):
     """
     并行处理样本
 
@@ -25,7 +25,8 @@ async def process_samples(api_requestor: AsyncApiRequester, data: list, n_sample
         api_requestor: API 请求器对象
         data: 数据集
         n_samples: 要处理的样本数量，默认为None表示处理所有样本
-        hooks: 钩子函数字典，可包含 'on_task_complete', 'on_task_error', 'on_json_error' 等
+        hooks: 钩子函数字典，可包含 'on_task_complete', 'on_task_error' 等
+        max_print_length: 打印LLM响应时的最大长度
 
     Returns:
         处理结果列表和统计信息
@@ -37,7 +38,7 @@ async def process_samples(api_requestor: AsyncApiRequester, data: list, n_sample
     total_samples = len(data)
 
     # 初始化 agent
-    agent = COTPromptAgent()
+    agent = ToolCallAgent()
 
     # 初始化钩子函数
     if hooks is None:
@@ -47,12 +48,9 @@ async def process_samples(api_requestor: AsyncApiRequester, data: list, n_sample
     default_hooks = {
         'on_task_complete': lambda i, response, *args:
             print(f"\n样本 {i} 完成 - 准确率: {'正确' if args[-1] == 1 else '错误'}\n"
-                  f"LLM响应: {response}"),
+                  f"LLM响应: {response[:max_print_length]}{'...' if len(response) > max_print_length else ''}"),
         'on_task_error': lambda i, error:
-            print(f"\n样本 {i} 处理出错: {str(error)}"),
-        'on_json_error': lambda i, response:
-            print(f"\n样本 {i}: 无法解析JSON响应\n"
-                 f"原始响应: {response}")
+            print(f"\n样本 {i} 处理出错: {str(error)}")
     }
 
     # 合并默认钩子和用户提供的钩子
@@ -85,45 +83,23 @@ async def process_samples(api_requestor: AsyncApiRequester, data: list, n_sample
             print(f"\n处理样本 {i}/{total_samples}...")
             model_response = await task
 
-            # 尝试解析JSON响应
-            try:
-                response_dict = json.loads(model_response)
-                solution = response_dict.get("solution", {})
-                reasoning = response_dict.get("reasoning", "")
+            # 评估回答
+            accuracy = evaluate_response(model_response, sample["solution"])
 
-                # 评估回答
-                # 创建格式化的答案字符串用于评估
-                formatted_response = " ".join([f"{key}. {value}" for key, value in solution.items()])
-                accuracy = evaluate_response(formatted_response, sample["solution"])
+            if accuracy == 1:
+                correct_count += 1
 
-                if accuracy == 1:
-                    correct_count += 1
+            # 保存结果
+            results.append({
+                "prompt": sample["prompt"],
+                "response": model_response,
+                "solution": sample["solution"],
+                "accuracy": accuracy
+            })
 
-                # 保存结果
-                results.append({
-                    "prompt": sample["prompt"],
-                    "response": model_response,
-                    "solution": sample["solution"],
-                    "accuracy": accuracy,
-                    "reasoning": reasoning
-                })
-
-                # 调用任务完成钩子
-                if 'on_task_complete' in hooks:
-                    hooks['on_task_complete'](i, model_response, sample.get("solution", ""), accuracy)
-
-            except json.JSONDecodeError:
-                # 调用JSON错误钩子
-                if 'on_json_error' in hooks:
-                    hooks['on_json_error'](i, model_response)
-
-                results.append({
-                    "prompt": sample["prompt"],
-                    "response": model_response,
-                    "solution": sample["solution"],
-                    "accuracy": 0,
-                    "error": "JSON解析错误"
-                })
+            # 调用任务完成钩子
+            if 'on_task_complete' in hooks:
+                hooks['on_task_complete'](i, model_response, sample.get("solution", ""), accuracy)
 
         except Exception as e:
             # 调用任务错误钩子
@@ -153,7 +129,7 @@ async def process_samples(api_requestor: AsyncApiRequester, data: list, n_sample
         "total_samples": total_samples,
         "correct_count": correct_count,
         "accuracy": accuracy,
-        "model": "COT Prompt Agent"
+        "model": "Tool Call Agent"
     }
 
 async def main():
@@ -171,28 +147,26 @@ async def main():
     n_samples = None
     print("将处理中文数据集的全部数据...")
 
-    # 不再限制LLM响应的打印长度
-    print("将显示完整的LLM响应内容")
+    # 设置LLM响应的最大打印长度
+    max_print_length = 200
+    print(f"LLM响应的最大打印长度设置为: {max_print_length}")
 
     # 定义自定义钩子函数
     hooks = {
         'on_task_complete': lambda i, response, *args:
             print(f"\n{'='*30}\n样本 {i} 完成 - 准确率: {'✓ 正确' if args[-1] == 1 else '✗ 错误'}\n"
-                  f"LLM响应: {response}\n{'='*30}"),
-        'on_json_error': lambda i, response:
-            print(f"\n{'='*30}\n样本 {i}: ⚠️ 无法解析JSON响应\n"
-                 f"原始响应: {response}\n{'='*30}"),
+                  f"LLM响应: {response[:max_print_length]}{'...' if len(response) > max_print_length else ''}\n{'='*30}"),
         'on_task_error': lambda i, error:
             print(f"\n{'='*30}\n样本 {i} ❌ 处理出错: {str(error)}\n{'='*30}")
     }
 
     # 使用 async with 创建和管理 api_requestor
-    async with AsyncApiRequester(max_tokens=8192) as api_requestor:
+    async with AsyncApiRequester() as api_requestor:
         # 处理样本
-        results, statistics = await process_samples(api_requestor, data, n_samples, hooks)
+        results, statistics = await process_samples(api_requestor, data, n_samples, hooks, max_print_length)
 
         # 保存JSON结果
-        output_json_file = os.path.join(output_dir, "cot_200_zh_output.json")
+        output_json_file = os.path.join(output_dir, "tool_call_200_zh_output.json")
         with open(output_json_file, "w", encoding="utf-8") as f:
             json.dump({
                 "results": results,
@@ -202,7 +176,7 @@ async def main():
         print(f"\n结果已保存到: {output_json_file}")
 
         # 保存CSV结果
-        output_csv_file = os.path.join(output_dir, "cot_prompt_result.csv")
+        output_csv_file = os.path.join(output_dir, "tool_call_result.csv")
         with open(output_csv_file, "w", encoding="utf-8", newline="") as f:
             csv_writer = csv.writer(f)
             # 写入表头
@@ -211,8 +185,8 @@ async def main():
             # 写入数据
             for i, result in enumerate(results, 1):
                 # 确定状态
-                if "error" in result and result["error"] == "JSON解析错误":
-                    status = "JSON无法解析"
+                if "error" in result:
+                    status = "错误"
                 elif result.get("accuracy", 0) == 1:
                     status = "正确"
                 else:

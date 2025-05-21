@@ -1,5 +1,4 @@
 # 单论对话，使用cot + one shot策略
-from typing import Any, Dict
 from agents.base_agent import BaseAgent
 from api_requestor import AsyncApiRequester
 import json
@@ -12,7 +11,7 @@ class COTPromptAgent(BaseAgent):
     def __init__(self):
         pass
 
-    async def call_api(self, api_requestor: AsyncApiRequester, prompt: str) -> str:
+    async def execute(self, api_requestor: AsyncApiRequester, prompt: str) -> str:
         """
         处理侦探问题并返回格式化的 JSON 答案
 

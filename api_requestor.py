@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 import random
-import json
+
 from typing import Dict, Any, List, Optional
 
 class AsyncApiRequester:
@@ -171,15 +171,7 @@ async def handle_result(future):
         print("-" * 50)
 
 async def main():
-    # 请替换为您的实际API token
-    API_TOKEN = "sk-vyimxjdmfvqsclztnnzuikgknwvleeglcoubomcbotiwlziq"
-    
-    async with AsyncApiRequester(
-        model="THUDM/GLM-4-32B-0414",
-        max_tokens=512,
-        temperature=0.7,
-        api_token=API_TOKEN
-    ) as requester:
+    async with AsyncApiRequester() as requester:
         tasks = []
         
         # 模拟真实场景，随机间隔发送请求

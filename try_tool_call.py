@@ -23,6 +23,7 @@ def process_tool_call(response):
     tool_call = response_data['choices'][0]['message']['tool_calls'][0]
     function_name = tool_call['function']['name']
     arguments = json.loads(tool_call['function']['arguments'])
+    print(function_name, arguments)
     
     # 执行对应的函数
     if function_name == 'add':
@@ -36,7 +37,7 @@ def process_tool_call(response):
         "messages": [
             {
                 "role": "user",
-                "content": "What is the sum of 1 and 2?"
+                "content": "What is the sum of 3 and 24?"
             },
             {
                 "role": "assistant",
@@ -63,7 +64,7 @@ payload = {
     "messages": [
         {
             "role": "user",
-            "content": "What is the sum of 1 and 2?"
+            "content": "What is the sum of 3 and 24?"
         }
     ],
     "stream": False,
@@ -101,6 +102,8 @@ headers = {
 }
 
 response = requests.request("POST", url, json=payload, headers=headers)
+
+print(response.text)
 
 # 如果响应包含工具调用，则处理工具调用
 if 'tool_calls' in json.loads(response.text)['choices'][0]['message']:

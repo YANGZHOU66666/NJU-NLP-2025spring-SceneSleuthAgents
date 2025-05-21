@@ -68,7 +68,7 @@ async def process_samples(api_requestor: AsyncApiRequester, data: list, n_sample
     # 为每个样本创建处理任务
     for i, sample in enumerate(data, 1):
         # 创建处理任务
-        task = asyncio.create_task(agent.call_api(api_requestor, sample["prompt"]))
+        task = asyncio.create_task(agent.execute(api_requestor, sample["prompt"]))
         tasks.append((i, task, sample))
 
     # 存储所有处理结果
